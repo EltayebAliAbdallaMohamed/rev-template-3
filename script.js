@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const currentSlideLabel = document.getElementById("current-slide-label");
   const ttsButton = document.getElementById("tts-button");
   const ttsStatus = document.getElementById("tts-status");
+  
+  let autoPlayAudio = false;
 
   function announceStatus(message) {
     if (!ttsStatus) return;
@@ -101,7 +103,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       section.innerHTML = `
         <div class="slide-content" tabindex="0">
-          <h1>${lesson.lessonTitle || `Lesson ${index + 1}`}</h1>
+          <div class="title-with-checkbox">
+            <h1>${lesson.lessonTitle || `Lesson ${index + 1}`}</h1>
+            <label class="auto-play-label">
+              <input type="checkbox" class="auto-play-checkbox" aria-label="Auto-play audio on navigation" />
+              <span class="checkbox-text">Auto-play</span>
+            </label>
+          </div>
 
           <div class="meta-grid">
             <div class="meta-card">
@@ -129,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <strong>Listen to the lesson audio:</strong>
             ${
               audioFile
-                ? `<audio controls preload="metadata" aria-label="Lesson audio for ${lesson.lessonTitle || "this lesson"}">
+                ? `<audio controls preload="metadata" aria-label="Lesson audio for ${lesson.lessonTitle || "this lesson"}" class="lesson-audio">
                     <source src="${audioFile}" type="audio/mpeg" />
                     Your browser does not support the audio element.
                   </audio>`
@@ -187,7 +195,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (current) {
         current.setAttribute("tabindex", "0");
         current.focus({ preventScroll: true });
+        
+        // Handle auto-play audio
+        const checkbox = current.querySelector(".auto-play-checkbox");
+        const audio = current.querySelector(".lesson-audio");
+        
+        if (checkbox && checkbox.checked && audio) {
+          audio.currentTime = 0;
+          audio.play().catch(err => console.log("Auto-play prevented:", err));
+        }
       }
+    });
+    
+    // Add event listeners to all checkboxes
+    document.querySelectorAll(".auto-play-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", (e) => {
+        autoPlayAudio = e.target.checked;
+      });
     });
 
   } catch (error) {
