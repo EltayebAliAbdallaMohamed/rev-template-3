@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const currentSlideLabel = document.getElementById("current-slide-label");
   const ttsButton = document.getElementById("tts-button");
   const ttsStatus = document.getElementById("tts-status");
-  
+
   let autoPlayAudio = false;
 
   function announceStatus(message) {
@@ -68,6 +68,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   document.addEventListener("keydown", (event) => {
+    const activeTag = document.activeElement && document.activeElement.tagName;
+    const isEditable =
+      activeTag === "INPUT" ||
+      activeTag === "TEXTAREA" ||
+      activeTag === "SELECT" ||
+      document.activeElement?.isContentEditable;
+
+    if (event.key === "ArrowLeft" && !isEditable) {
+      event.preventDefault();
+      Reveal.left();
+      return;
+    }
+
+    if (event.key === "ArrowRight" && !isEditable) {
+      event.preventDefault();
+      Reveal.right();
+      return;
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
       event.preventDefault();
       speakSelectedText();
@@ -186,7 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentSlideLabel.textContent = `${currentIndex} / ${total}`;
     };
 
-    // Wait for Reveal to be ready before updating slide info
     Reveal.on("ready", updateFooterSlideInfo);
     Reveal.addEventListener("slidechanged", updateFooterSlideInfo);
 
@@ -195,20 +213,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (current) {
         current.setAttribute("tabindex", "0");
         current.focus({ preventScroll: true });
-        
-        // Handle auto-play audio
+
         const checkbox = current.querySelector(".auto-play-checkbox");
         const audio = current.querySelector(".lesson-audio");
-        
+
         if (checkbox && checkbox.checked && audio) {
           audio.currentTime = 0;
-          audio.play().catch(err => console.log("Auto-play prevented:", err));
+          audio.play().catch(() => {});
         }
       }
     });
-    
-    // Add event listeners to all checkboxes
-    document.querySelectorAll(".auto-play-checkbox").forEach(checkbox => {
+
+    document.querySelectorAll(".auto-play-checkbox").forEach((checkbox) => {
       checkbox.addEventListener("change", (e) => {
         autoPlayAudio = e.target.checked;
       });
